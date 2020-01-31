@@ -1,22 +1,47 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(MyApp());
+import 'pages/program.dart';
+import 'pages/start.dart';
+import 'pages/map.dart';
+import 'pages/prayers.dart';
+import 'pages/speakers.dart';
+import 'pages/news.dart';
+import 'pages/donate.dart';
+import 'pages/social_media.dart';
+import 'routes.dart';
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Move 2020',
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text("Move 2020"),
-        ),
-        body: Center(
-          child: Text(
-            'Move 2020 App',
-          ),
-        ),
+void main() {
+  runApp(
+    MaterialApp(
+      title: "Move 2020",
+      theme: ThemeData(primarySwatch: Colors.red),
+      initialRoute: Routes.start,
+      onGenerateRoute: (settings) => PageRouteBuilder(
+        pageBuilder: (_, __, ___) {
+          switch (settings.name) {
+            case Routes.start:
+              return StartPage();
+            case Routes.program:
+              return ProgramPage();
+            case Routes.map:
+              return MapPage();
+            case Routes.prayers:
+              return PrayersPage();
+            case Routes.speakers:
+              return SpeakersPage();
+            case Routes.news:
+              return NewsPage();
+            case Routes.donate:
+              return DonatePage();
+            case Routes.socialMedia:
+              return SocialMediaPage();
+            default:
+              return null;
+          }
+        },
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
       ),
-    );
-  }
+    ),
+  );
 }
