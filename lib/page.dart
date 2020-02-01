@@ -16,6 +16,19 @@ class Page extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: "Suchen",
+            onPressed: () async {
+              final route = await showSearch(
+                  context: context, delegate: AppSearchDelegate());
+              if (route != null) {
+                Navigator.of(context).pushNamed(route);
+              }
+            },
+          )
+        ],
         elevation: defaultTargetPlatform == TargetPlatform.android ? 5 : 0,
       ),
       bottomNavigationBar: bottomNavigationBar,
@@ -73,4 +86,134 @@ void navigateTo(String route, context) {
   var navigator = Navigator.of(context);
   navigator.pop();
   navigator.pushReplacementNamed(route);
+}
+
+class AppSearchDelegate extends SearchDelegate {
+  bool showingResults = false;
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          if (showingResults) {
+            showingResults = false;
+            showSuggestions(context);
+          } else {
+            query = "";
+          }
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return null;
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    showingResults = true;
+    if (query == "nix") {
+      return Center(
+        child: Text("Die Suche ergab keine Treffer."),
+      );
+    }
+    return ListView(
+      children: [
+        ListTile(
+          title: Text("Sprecher"),
+          subtitle: Text.rich(TextSpan(children: [
+            TextSpan(text: "Bla bla.. "),
+            TextSpan(
+              text: query,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.redAccent,
+              ),
+            ),
+            TextSpan(text: " bla")
+          ])),
+          onTap: () => close(context, Routes.speakers),
+        ),
+        ListTile(
+          title: Text("Spenden"),
+          subtitle: Text.rich(TextSpan(children: [
+            TextSpan(text: "Bla "),
+            TextSpan(
+              text: query,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.redAccent,
+              ),
+            ),
+            TextSpan(text: " blabla .. bla")
+          ])),
+          onTap: () => close(context, Routes.donate),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    // TODO: store and show previous searches
+    if (query.isEmpty) {
+      // TODO: use ListView.builder
+      return ListView(
+        children: [
+          ListTile(
+            title: Text("Sprecher"),
+            onTap: () {
+              query = "Sprecher";
+              showResults(context);
+            },
+          ),
+          ListTile(
+            title: Text("Spenden"),
+            onTap: () {
+              query = "Spenden";
+              showResults(context);
+            },
+          ),
+        ],
+      );
+    }
+    return ListView(
+      children: [
+        ListTile(
+          title: Text("Sprecher"),
+          subtitle: Text.rich(TextSpan(children: [
+            TextSpan(text: "Bla bla.. "),
+            TextSpan(
+              text: query,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.redAccent,
+              ),
+            ),
+            TextSpan(text: " bla")
+          ])),
+          onTap: () => close(context, Routes.speakers),
+        ),
+        ListTile(
+          title: Text("Spenden"),
+          subtitle: Text.rich(TextSpan(children: [
+            TextSpan(text: "Bla "),
+            TextSpan(
+              text: query,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.redAccent,
+              ),
+            ),
+            TextSpan(text: " blabla .. bla")
+          ])),
+          onTap: () => close(context, Routes.donate),
+        ),
+      ],
+    );
+  }
 }
