@@ -32,9 +32,3 @@ App für die [Move 2020](https://www.move2020.org/).
         - News/Benachrichtigungen
         - Spenden
         - Social Media
-
-## Offene Fragen:
-- Englisch?
-- Farbschema
-- App Logo
-- Programm Layout: Mehrere Spalten pro Altersstufe?
