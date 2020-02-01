@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../page.dart';
+import '../routes.dart';
 
 class NewsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Page(
       title: "News",
+      route: Routes.news,
       body: ListView(
         children: <Widget>[
           NewsListTile(
@@ -16,7 +18,25 @@ class NewsPage extends StatelessWidget {
                 "Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht.",
           ),
           NewsListTile(
+            title: "Irgendwas dsf!!!",
+            time: "Vorgestern, 13:00",
+            content:
+                "Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht.",
+          ),
+          NewsListTile(
             title: "Irgendwas anderes!!!",
+            time: "Vorgestern, 13:00",
+            content:
+                "Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht.",
+          ),
+          NewsListTile(
+            title: "Irgendwas fff!!!",
+            time: "Vorgestern, 13:00",
+            content:
+                "Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht.",
+          ),
+          NewsListTile(
+            title: "Irgendwas xxx!!!",
             time: "Vorgestern, 13:00",
             content:
                 "Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht.",
@@ -32,58 +52,107 @@ class NewsListTile extends StatelessWidget {
   final String time;
   final String content;
 
-  NewsListTile({this.title, this.time, this.content});
+  NewsListTile({
+    @required this.title,
+    @required this.time,
+    @required this.content,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text(time),
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => NewsDetails(title, time, content))),
+    return Hero(
+      tag: title,
+      transitionOnUserGestures: true,
+      flightShuttleBuilder: (context, anim, dir, fromContext, toContext) =>
+          NewsCard(title, time, content, anim),
+      child: NewsCard(
+        title,
+        time,
+        content,
+        AlwaysStoppedAnimation(0),
       ),
     );
   }
 }
 
-class NewsDetails extends StatelessWidget {
+class NewsCard extends AnimatedWidget {
+  static final _opacityTween = Tween<double>(begin: 0, end: 1);
+
   final String title;
   final String time;
   final String content;
 
-  NewsDetails(this.title, this.time, this.content);
+  NewsCard(
+    this.title,
+    this.time,
+    this.content, [
+    Animation<double> animation,
+  ]) : super(listenable: animation);
 
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("News")),
-      body: Container(
-        child: Card(
-          margin: EdgeInsets.all(16),
-          child: Padding(
-            padding: EdgeInsets.all(16).add(EdgeInsets.only(bottom: 8)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  time,
-                  style: TextStyle(color: Colors.grey.shade500),
-                ),
-                SizedBox(height: 16),
-                Text(content),
-              ],
+    final animation = listenable as Animation<double>;
+
+    return SingleChildScrollView(
+      child: Card(
+        child: Column(
+          children: [
+            ListTile(
+              title: Text(title),
+              subtitle: Text(time),
+              onTap: createOnTapHandler(context),
             ),
-          ),
+            _content(animation),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _content(animation) {
+    if (animation.value == 0) {
+      return SizedBox(height: 0);
+    }
+    return Container(
+      padding: EdgeInsets.only(left: 16, right: 16, bottom: 32),
+      child: Opacity(
+        opacity: _opacityTween.evaluate(animation),
+        child: Text(content),
+      ),
+    );
+  }
+
+  Function createOnTapHandler(context) {
+    if ((listenable as Animation<double>).value == 0) {
+      return () => Navigator.of(context).push(
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => Scaffold(
+                appBar: AppBar(
+                  title: Text("News"),
+                ),
+                body: Hero(
+                  tag: title,
+                  transitionOnUserGestures: true,
+                  flightShuttleBuilder:
+                      (context, anim, dir, fromContext, toContext) => NewsCard(
+                    title,
+                    time,
+                    content,
+                    anim,
+                  ),
+                  child: NewsCard(
+                    title,
+                    time,
+                    content,
+                    AlwaysStoppedAnimation(1),
+                  ),
+                ),
+              ),
+              transitionsBuilder: (_, anim, __, child) =>
+                  FadeTransition(opacity: anim, child: child),
+            ),
+          );
+    } else {
+      return null;
+    }
   }
 }

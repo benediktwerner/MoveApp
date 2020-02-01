@@ -5,9 +5,10 @@ import 'routes.dart';
 
 class Page extends StatelessWidget {
   final String title;
+  final String route;
   final Widget body;
 
-  Page({this.title, this.body});
+  Page({this.title, this.route, this.body});
 
   @override
   Widget build(BuildContext context) {
@@ -21,53 +22,47 @@ class Page extends StatelessWidget {
           children: <Widget>[
             DrawerHeader(
               child: Container(
-                child: Image.asset("assets/images/logo_move.png", width: 250),
+                alignment: Alignment.center,
+                child: Image.asset(
+                  "assets/images/logo_move_large_transparent.png",
+                  width: 250,
+                ),
               ),
             ),
-            ListTile(
-              title: Text("Start"),
-              leading: Icon(Icons.home),
-              onTap: () => navigateTo(Routes.start, context),
-            ),
-            ListTile(
-              title: Text("Programm"),
-              leading: Icon(Icons.calendar_today),
-              onTap: () => navigateTo(Routes.program, context),
-            ),
-            ListTile(
-              title: Text("Lageplan"),
-              leading: Icon(Icons.map),
-              onTap: () => navigateTo(Routes.map, context),
-            ),
-            ListTile(
-              title: Text("Gebetsbuch"),
-              leading: Icon(Icons.book),
-              onTap: () => navigateTo(Routes.prayers, context),
-            ),
-            ListTile(
-              title: Text("Sprecher & Musiker"),
-              leading: Icon(Icons.people),
-              onTap: () => navigateTo(Routes.speakers, context),
-            ),
-            ListTile(
-              title: Text("News"),
-              leading: Icon(Icons.announcement),
-              onTap: () => navigateTo(Routes.news, context),
-            ),
-            ListTile(
-              title: Text("Spenden"),
-              leading: Icon(Icons.favorite),
-              onTap: () => navigateTo(Routes.donate, context),
-            ),
-            ListTile(
-              title: Text("Social Media"),
-              leading: Icon(Icons.share),
-              onTap: () => navigateTo(Routes.socialMedia, context),
-            ),
+            DrawerListTile("Start", Icons.home, Routes.start, route),
+            DrawerListTile(
+                "Programm", Icons.calendar_today, Routes.program, route),
+            DrawerListTile("Lageplan", Icons.map, Routes.map, route),
+            DrawerListTile("Gebetsbuch", Icons.book, Routes.prayers, route),
+            DrawerListTile(
+                "Sprecher & Musiker", Icons.people, Routes.speakers, route),
+            DrawerListTile("News", Icons.announcement, Routes.news, route),
+            DrawerListTile("Spenden", Icons.favorite, Routes.donate, route),
+            DrawerListTile(
+                "Social Media", Icons.share, Routes.socialMedia, route),
           ],
         ),
       ),
       body: body,
+    );
+  }
+}
+
+class DrawerListTile extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final String route;
+  final String activeRoute;
+
+  DrawerListTile(this.title, this.icon, this.route, this.activeRoute);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      selected: route == activeRoute,
+      onTap: () => navigateTo(route, context),
     );
   }
 }

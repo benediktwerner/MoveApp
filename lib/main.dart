@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'page.dart';
 import 'pages/program.dart';
 import 'pages/start.dart';
 import 'pages/map.dart';
@@ -36,7 +37,15 @@ void main() {
             case Routes.socialMedia:
               return SocialMediaPage();
             default:
-              return null;
+              return Page(
+                title: "Fehler",
+                route: null,
+                body: Container(
+                  child: Center(
+                    child: Text("Seite nicht gefunden"),
+                  ),
+                ),
+              );
           }
         },
         transitionsBuilder: (_, anim, __, child) =>
