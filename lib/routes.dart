@@ -1,5 +1,5 @@
 class Routes {
-  static const start = "/start";
+  static const start = "/";
   static const program = "/program";
   static const map = "/map";
   static const prayers = "/prayers";

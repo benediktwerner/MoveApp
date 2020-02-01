@@ -42,7 +42,7 @@ void main() {
                 route: null,
                 body: Container(
                   child: Center(
-                    child: Text("Seite nicht gefunden"),
+                    child: Text("Seite nicht gefunden: `${settings.name}`"),
                   ),
                 ),
               );

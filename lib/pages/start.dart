@@ -83,7 +83,7 @@ class _MainButton extends StatelessWidget {
             ],
           ),
         ),
-        onTap: () => Navigator.of(context).pushReplacementNamed(route),
+        onTap: () => Navigator.of(context).pushNamed(route),
       ),
     );
   }
