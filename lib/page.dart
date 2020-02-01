@@ -7,8 +7,9 @@ class Page extends StatelessWidget {
   final String title;
   final String route;
   final Widget body;
+  final Widget bottomNavigationBar;
 
-  Page({this.title, this.route, this.body});
+  Page({this.title, this.route, this.body, this.bottomNavigationBar});
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +18,7 @@ class Page extends StatelessWidget {
         title: Text(title),
         elevation: defaultTargetPlatform == TargetPlatform.android ? 5 : 0,
       ),
+      bottomNavigationBar: bottomNavigationBar,
       drawer: Drawer(
         child: ListView(
           children: <Widget>[

@@ -6,15 +6,68 @@ import '../routes.dart';
 const double topHeight = 35;
 const double leftWidth = 60;
 const double cellWidth = 150;
-const double cellHeight = 20;
+const double cellHeight = 15;
 
-class ProgramPage extends StatelessWidget {
+const icons = [
+  Icons.looks_one,
+  Icons.looks_two,
+  Icons.looks_3,
+  Icons.looks_4,
+  Icons.looks_5,
+  Icons.looks_6,
+];
+
+class ProgramPage extends StatefulWidget {
+  @override
+  _ProgramPageState createState() => _ProgramPageState();
+}
+
+class _ProgramPageState extends State<ProgramPage>
+    with SingleTickerProviderStateMixin {
+  TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(vsync: this, length: 3);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Page(
       title: "Programm",
       route: Routes.program,
-      body: TimetableView(),
+      body: TabBarView(
+          controller: _tabController,
+          children: [TimetableView(), TimetableView(), TimetableView()]),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.looks_one),
+            title: Text("Fr, 12.06."),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.looks_two),
+            title: Text("Sa, 13.06."),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.looks_3),
+            title: Text("So, 14.06."),
+          ),
+        ],
+        currentIndex: _tabController.index,
+        selectedItemColor: Colors.redAccent,
+        onTap: (index) {
+          _tabController.animateTo(index);
+          setState(() {});
+        },
+      ),
     );
   }
 }
@@ -47,8 +100,8 @@ class TimetableView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var start = 24 * 4;
-    var end = 0;
+    var start = 9 * 4;
+    var end = 18 * 4;
 
     for (var prog in programs) {
       if (prog.start < start) start = prog.start;
@@ -56,7 +109,8 @@ class TimetableView extends StatelessWidget {
     }
 
     start = (--start) - (start % 4);
-    end += 4;
+    end += 3;
+    end += 4 - (end % 4);
 
     List<Widget> programElements = [
       CustomPaint(
@@ -132,6 +186,7 @@ class TimetableView extends StatelessWidget {
                       ),
                     ),
                   ),
+                  VerticalDivider(width: 1),
                   Expanded(
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (_) {
@@ -205,19 +260,22 @@ class ProgramElement extends StatelessWidget {
       top: cellHeight * (timeStart - timeOffset),
       width: cellWidth * (trackEnd - trackStart + 1),
       height: cellHeight * (timeEnd - timeStart),
-      child: Container(
-        margin: EdgeInsets.all(2),
-        padding: EdgeInsets.all(8),
-        color: Colors.red.shade300,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "${timeToString(timeStart)} - ${timeToString(timeEnd)}",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Text(name),
-          ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          margin: EdgeInsets.all(2),
+          padding: EdgeInsets.all(8),
+          color: Colors.red.shade300,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "${timeToString(timeStart)} - ${timeToString(timeEnd)}",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(name),
+            ],
+          ),
         ),
       ),
     );
