@@ -34,7 +34,7 @@ class StartPage extends StatelessWidget {
                     style: TextStyle(fontStyle: FontStyle.italic)),
                 TextSpan(
                     text:
-                        "(siehe Joh 4,4-42) – findet vom 12. bis 14. Juni 2020 in Kempten die MOVE statt. Bei der Begegnung mit Jesus am Jakobsbrunnen findet die Frau aus Samarien die Quelle ewigen Lebens. Sie ändert ihr Leben und wird zum Apostel. Die MOVE will ein Fest des Glaubens für alle Altersgruppen sein."),
+                        " (siehe Joh 4,4-42) – findet vom 12. bis 14. Juni 2020 in Kempten die MOVE statt. Bei der Begegnung mit Jesus am Jakobsbrunnen findet die Frau aus Samarien die Quelle ewigen Lebens. Sie ändert ihr Leben und wird zum Apostel. Die MOVE will ein Fest des Glaubens für alle Altersgruppen sein."),
               ],
             ),
           ),
