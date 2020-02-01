@@ -26,7 +26,7 @@ class Page extends StatelessWidget {
               child: Container(
                 alignment: Alignment.center,
                 child: Image.asset(
-                  "assets/images/logo_move_large_transparent.png",
+                  "assets/images/logo_move_transparent.png",
                   width: 250,
                 ),
               ),

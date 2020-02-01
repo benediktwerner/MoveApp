@@ -16,7 +16,7 @@ class StartPage extends StatelessWidget {
             height: 175,
             child: Center(
               child: Image.asset(
-                  "assets/images/logo_move_large_transparent.png",
+                  "assets/images/logo_move_transparent.png",
                   width: 250),
             ),
           ),
