@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Move 2020 Admin Panel Login</title>
+
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+      integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body style="height: 100vh">
+    <div
+      style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%"
+    >
+      <img src="logo_move.png" style="max-width: 250px; margin: 20px" />
+      <h3>Admin Panel</h3>
+      <form class="my-3" id="login-form">
+        <div class="input-group">
+          <input class="form-control" placeholder="Passwort" type="password" id="password" />
+          <div class="input-group-append">
+            <button type="submit" class="btn btn-primary">Login</button>
+          </div>
+        </div>
+      </form>
+      <h6 class="invisible" style="color: var(--danger);margin-bottom: 20vh" id="login-failed">
+        Login fehlgeschlagen
+      </h6>
+    </div>
+
+    <script src="/__/firebase/7.8.0/firebase-app.js"></script>
+    <script src="/__/firebase/7.8.0/firebase-auth.js"></script>
+    <script src="/__/firebase/7.8.0/firebase-firestore.js"></script>
+    <script src="/__/firebase/init.js"></script>
+
+    <script>
+      firebase.auth().onAuthStateChanged(function(user) {
+        console.log(user);
+        if (user) {
+          window.location = '/dashboard.html';
+        }
+      });
+
+      var $ = e => document.querySelector(e);
+      document.addEventListener('DOMContentLoaded', function() {
+        $('#login-form').addEventListener('submit', function(event) {
+          event.preventDefault();
+          var password = $('#password').value;
+          firebase
+            .auth()
+            .signInWithEmailAndPassword('noreply@get-strong.org', password)
+            .catch(function(error) {
+              $('#login-failed').className = '';
+              console.error('Login failed: ' + error.message + ' (' + error.code + ')');
+            });
+        });
+      });
+    </script>
+  </body>
+</html>

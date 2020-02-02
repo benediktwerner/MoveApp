@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Move 2020 Admin Panel</title>
+
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+      integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-bottom">
+      <div class="container">
+        <div class="navbar-brand">
+          <img src="logo_move.png" />
+        </div>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#mainNavbarContent"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNavbarContent">
+          <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+            <li class="nav-item active">
+              <a class="nav-link" href="/dashboard.html">News</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard-program.html">Programm</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" id="logout">Abmelden</a>
+            </li>
+          </ul>
+
+          <div class="click-catcher" data-toggle="collapse" data-target="#mainNavbarContent"></div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container content">
+      <h1 class="mb-4">
+        News
+        <button
+          type="button"
+          class="btn btn-outline-primary ml-2"
+          data-toggle="modal"
+          data-target="#addModal"
+        >
+          Neu
+        </button>
+      </h1>
+
+      <div id="card-container"></div>
+    </div>
+
+    <div class="modal fade" id="addModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">News hinzufügen</h5>
+            <button type="button" class="close" data-dismiss="modal">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="new-title">Titel</label>
+              <input type="text" class="form-control" id="new-title" />
+            </div>
+            <div class="form-group">
+              <label for="new-content">Inhalt</label>
+              <textarea class="form-control" id="new-content"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Abbrechen</button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-dismiss="modal"
+              id="add-modal-confirm"
+            >
+              Hinzufügen
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <template id="card-template">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title"></h5>
+          <h6 class="card-subtitle mb-2 text-muted"></h6>
+          <p class="card-text"></p>
+          <a href="#" class="card-link" onclick="onEdit(event)">Bearbeiten</a>
+          <a href="#" class="card-link" onclick="onDelete(event)">Löschen</a>
+        </div>
+      </div>
+    </template>
+
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+      integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+      crossorigin="anonymous"
+    ></script>
+
+    <script src="/__/firebase/7.8.0/firebase-app.js"></script>
+    <script src="/__/firebase/7.8.0/firebase-auth.js"></script>
+    <script src="/__/firebase/7.8.0/firebase-firestore.js"></script>
+    <script src="/__/firebase/init.js"></script>
+
+    <script>
+      const db = firebase.firestore();
+
+      var $ = e => document.querySelector(e);
+      Element.prototype.$ = function(cls) {
+        return this.getElementsByClassName(cls)[0];
+      };
+      Element.prototype.$$ = function(cls) {
+        return this.getElementsByClassName(cls);
+      };
+
+      function formatTime(timestamp) {
+        const time = timestamp.toDate();
+        const now = new Date();
+        const daysDiff = Math.floor((now - time) / 86400000);
+
+        const timeString =
+          ', ' +
+          time.getHours() +
+          ':' +
+          time
+            .getMinutes()
+            .toString()
+            .padStart(2, '0');
+
+        if (now.getYear() == time.getYear()) {
+          if (now.getMonth() == time.getMonth() && now.getDate() == time.getDate()) {
+            return 'Heute' + timeString;
+          } else if (daysDiff < 2) {
+            return 'Gestern' + timeString;
+          }
+        }
+
+        return 'vor ' + daysDiff + ' Tagen' + timeString;
+      }
+
+      function onEdit(event) {
+        console.log(event.target.dataset.id);
+      }
+
+      function onDelete(event) {
+        if (confirm('Bist du sicher?')) {
+          db.collection('news')
+            .doc(event.target.dataset.id)
+            .delete()
+            .catch(error => alert('Fehler: ' + error));
+        }
+      }
+
+      db.collection('news').onSnapshot(function(snapshot) {
+        const container = $('#card-container');
+        const template = $('#card-template');
+        const docs = snapshot.docs.map(d => {
+          var obj = d.data();
+          obj.id = d.id;
+          return obj;
+        });
+        docs.sort((a, b) => b.time.seconds - a.time.seconds);
+
+        while (container.children.length > 0) {
+          container.removeChild(container.firstChild);
+        }
+
+        for (const doc of docs) {
+          const newEle = template.content.cloneNode(true);
+          newEle.firstElementChild.$('card-title').innerText = doc.title;
+          newEle.firstElementChild.$('card-subtitle').innerText = formatTime(doc.time);
+          newEle.firstElementChild.$('card-text').innerText = doc.content;
+          for (const btn of newEle.firstElementChild.$$('card-link')) {
+            btn.dataset.id = doc.id;
+          }
+          container.appendChild(newEle);
+        }
+      });
+
+      document.addEventListener('DOMContentLoaded', event => {
+        $('#add-modal-confirm').addEventListener('click', () => {
+          db.collection('news')
+            .add({
+              title: $('#new-title').value,
+              content: $('#new-content').value,
+              time: new Date(),
+            })
+            .catch(error => alert('Fehler: ' + error));
+          $('#new-title').value = '';
+          $('#new-content').value = '';
+        });
+        $('#logout').addEventListener('click', () =>
+          firebase
+            .auth()
+            .signOut()
+            .then(() => (window.location = '/index.html'))
+            .catch(error => alert('Fehler: ' + error))
+        );
+      });
+    </script>
+  </body>
+</html>
