@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "120081735318",
+    "firebase_url": "https://move-app-2020.firebaseio.com",
+    "project_id": "move-app-2020",
+    "storage_bucket": "move-app-2020.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:120081735318:android:5324dfc21cb965e855acb7",
+        "android_client_info": {
+          "package_name": "de.benediktwerner.move_2020"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "120081735318-vpblvnigej96a04qfq3a66q5m3fl44on.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpJyFJTEUNZObBc5ynZkXfSlg_MSqpgas"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "120081735318-vpblvnigej96a04qfq3a66q5m3fl44on.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

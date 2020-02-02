@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>120081735318-n17mf8cufjj4uso193ippr9iudp1blav.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.120081735318-n17mf8cufjj4uso193ippr9iudp1blav</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDki6fUj12VFs_lLBUHHMtSuYf8qmvOt4s</string>
+	<key>GCM_SENDER_ID</key>
+	<string>120081735318</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>de.benediktwerner.move2020</string>
+	<key>PROJECT_ID</key>
+	<string>move-app-2020</string>
+	<key>STORAGE_BUCKET</key>
+	<string>move-app-2020.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:120081735318:ios:b2511f0f11c26d3155acb7</string>
+	<key>DATABASE_URL</key>
+	<string>https://move-app-2020.firebaseio.com</string>
+</dict>
+</plist>

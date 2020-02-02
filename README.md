@@ -32,3 +32,6 @@ App für die [Move 2020](https://www.move2020.org/).
         - News/Benachrichtigungen
         - Spenden
         - Social Media
+
+## TODO for iOS
+Drag `GoogleService-info.plist` into Runner directory in Xcode (check `Create groups`)

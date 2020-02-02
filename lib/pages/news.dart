@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../page.dart';
 import '../routes.dart';
@@ -9,42 +10,50 @@ class NewsPage extends StatelessWidget {
     return Page(
       title: "News",
       route: Routes.news,
-      body: ListView(
-        children: <Widget>[
-          NewsListTile(
-            title: "Something happened!",
-            time: "Gestern, 20:00",
-            content:
-                "Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht.",
-          ),
-          NewsListTile(
-            title: "Irgendwas dsf!!!",
-            time: "Vorgestern, 13:00",
-            content:
-                "Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht. Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht.",
-          ),
-          NewsListTile(
-            title: "Irgendwas anderes!!!",
-            time: "Vorgestern, 13:00",
-            content:
-                "Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht.",
-          ),
-          NewsListTile(
-            title: "Irgendwas fff!!!",
-            time: "Vorgestern, 13:00",
-            content:
-                "Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht.",
-          ),
-          NewsListTile(
-            title: "Irgendwas xxx!!!",
-            time: "Vorgestern, 13:00",
-            content:
-                "Lorem ipsum dolores and some more stuff irgendwas so das hier halt was steht.",
-          ),
-        ],
+      body: StreamBuilder(
+        stream: Firestore.instance.collection("news").snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          final List<DocumentSnapshot> documents = snapshot.data.documents;
+          documents.sort((a, b) => b["time"].compareTo(a["time"]));
+
+          return ListView.builder(
+            itemCount: documents.length,
+            itemBuilder: (context, index) => _buildNewsTile(documents[index]),
+          );
+        },
       ),
     );
   }
+}
+
+String formatTime(Timestamp timestamp) {
+  final DateTime time = timestamp.toDate();
+  final now = DateTime.now();
+  final daysDiff = now.difference(time).inDays;
+
+  final timeString = ", ${time.hour}:${time.minute.toString().padLeft(2, '0')}";
+
+  if (now.year == time.year) {
+    if (now.month == time.month && now.day == time.day) {
+      return "Heute" + timeString;
+    } else if (daysDiff < 2) {
+      return "Gestern" + timeString;
+    }
+  }
+
+  return "vor $daysDiff Tagen" + timeString;
+}
+
+Widget _buildNewsTile(DocumentSnapshot document) {
+  return NewsListTile(
+    title: document["title"],
+    time: formatTime(document["time"]),
+    content: document["content"],
+  );
 }
 
 class NewsListTile extends StatelessWidget {
@@ -114,6 +123,7 @@ class NewsCard extends AnimatedWidget {
     }
     return Container(
       padding: EdgeInsets.only(left: 16, right: 16, bottom: 32),
+      alignment: Alignment.topLeft,
       child: Opacity(
         opacity: _opacityTween.evaluate(animation),
         child: Text(content),
