@@ -91,6 +91,8 @@ void navigateTo(String route, context) {
 class AppSearchDelegate extends SearchDelegate {
   bool showingResults = false;
 
+  AppSearchDelegate() : super(searchFieldLabel: "Suchen");
+
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
