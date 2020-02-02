@@ -7,7 +7,7 @@ class StartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Page(
-      title: "Wilkommen zur Move 2020",
+      title: "Willkommen zur Move 2020",
       route: Routes.start,
       body: ListView(
         padding: EdgeInsets.only(left: 32, right: 32, bottom: 32),
