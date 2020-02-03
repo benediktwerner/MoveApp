@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../page.dart';
 import '../routes.dart';
@@ -16,6 +20,15 @@ const icons = [
   Icons.looks_5,
   Icons.looks_6,
 ];
+const weekdays = [
+  "Mo",
+  "Di",
+  "Mi",
+  "Do",
+  "Fr",
+  "Sa",
+  "So",
+];
 
 class ProgramPage extends StatefulWidget {
   @override
@@ -23,18 +36,55 @@ class ProgramPage extends StatefulWidget {
 }
 
 class _ProgramPageState extends State<ProgramPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   TabController _tabController;
+  List<Timestamp> days;
+  Map<String, int> tracksToPos;
+  List<String> tracks;
+  List<DocumentSnapshot> programs;
+  StreamSubscription<QuerySnapshot> _programListener;
+  StreamSubscription<QuerySnapshot> _tracksListener;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(vsync: this, length: 3);
+
+    _programListener =
+        Firestore.instance.collection("program").snapshots().listen((snapshot) {
+      setState(() {
+        programs = snapshot.documents;
+        final daysSet = Set<Timestamp>();
+        for (var prog in programs) {
+          daysSet.add(prog.data["day"]);
+        }
+        days = daysSet.toList();
+        days.sort((a, b) => a.seconds - b.seconds);
+
+        if (_tabController == null || _tabController.length != days.length) {
+          _tabController = TabController(vsync: this, length: days.length);
+          _tabController.addListener(() => setState(() {}));
+        }
+      });
+    });
+
+    _tracksListener =
+        Firestore.instance.collection("tracks").snapshots().listen((snapshot) {
+      setState(() {
+        tracksToPos = {};
+        tracks = [];
+        for (var track in snapshot.documents) {
+          tracksToPos[track.documentID] = track.data["position"];
+          tracks.add(track.documentID);
+        }
+      });
+    });
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabController?.dispose();
+    _programListener?.cancel();
+    _tracksListener?.cancel();
     super.dispose();
   }
 
@@ -43,32 +93,53 @@ class _ProgramPageState extends State<ProgramPage>
     return Page(
       title: "Programm",
       route: Routes.program,
-      body: TabBarView(
-          controller: _tabController,
-          children: [TimetableView(), TimetableView(), TimetableView()]),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.looks_one),
-            title: Text("Fr, 12.06."),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.looks_two),
-            title: Text("Sa, 13.06."),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.looks_3),
-            title: Text("So, 14.06."),
-          ),
-        ],
-        currentIndex: _tabController.index,
-        selectedItemColor: Colors.redAccent,
-        onTap: (index) {
-          _tabController.animateTo(index);
-          setState(() {});
-        },
-      ),
+      body: _makeBody(),
+      bottomNavigationBar: tracks == null || programs == null || days.length < 2
+          ? null
+          : BottomNavigationBar(
+              items: _makeBottomNavBarItems(),
+              currentIndex: _tabController.index,
+              selectedItemColor: Colors.redAccent,
+              onTap: (index) {
+                setState(() => _tabController.animateTo(index));
+              },
+            ),
     );
+  }
+
+  Widget _makeBody() {
+    if (tracks == null || programs == null) {
+      return Center(child: CircularProgressIndicator());
+    } else {
+      final ps = <Timestamp, List<Program>>{};
+      for (final p in programs) {
+        final ts = <int>[];
+        for (final t in p["tracks"]) ts.add(tracksToPos[t]);
+        ts.sort();
+        final day = p["day"];
+        if (!ps.containsKey(day)) ps[day] = [];
+        ps[day].add(Program(p["timeStart"], p["timeEnd"], ts, p["name"]));
+      }
+      return TabBarView(
+        controller: _tabController,
+        children: days.map((d) => TimetableView(tracks, ps[d])).toList(),
+      );
+    }
+  }
+
+  List<BottomNavigationBarItem> _makeBottomNavBarItems() {
+    final result = <BottomNavigationBarItem>[];
+    for (var i = 0; i < days.length; i++) {
+      final date = days[i].toDate();
+      final weekday = weekdays[date.weekday];
+      final day = date.day.toString().padLeft(2, "0");
+      final month = date.month.toString().padLeft(2, "0");
+      result.add(BottomNavigationBarItem(
+        icon: Icon(icons[i]),
+        title: Text("$weekday, $day.$month"),
+      ));
+    }
+    return result;
   }
 }
 
@@ -81,31 +152,22 @@ class Program {
   Program(this.start, this.end, this.tracks, this.name);
 }
 
-final programs = [
-  Program(7 * 4, 10 * 4, [0, 1, 2], "Frühstück"),
-  Program(10 * 4 + 1, 12 * 4, [0], "Wandern"),
-  Program(10 * 4, 13 * 4, [1, 2], "Kino"),
-  Program(14 * 4, 15 * 4, [0, 2], "Test"),
-];
-
-final tracks = [
-  "Erwachsene",
-  "GetStrong",
-  "NET",
-];
-
 class TimetableView extends StatelessWidget {
   final ScrollController _mainScrollController = new ScrollController();
   final ScrollController _sideScrollController = new ScrollController();
+  final List<String> tracks;
+  final List<Program> program;
+
+  TimetableView(this.tracks, this.program);
 
   @override
   Widget build(BuildContext context) {
     var start = 9 * 4;
     var end = 18 * 4;
 
-    for (var prog in programs) {
-      if (prog.start < start) start = prog.start;
-      if (prog.end > end) end = prog.end;
+    for (var prog in program) {
+      start = min(start, prog.start);
+      end = max(end, prog.end);
     }
 
     start = (--start) - (start % 4);
@@ -122,7 +184,7 @@ class TimetableView extends StatelessWidget {
       ),
     ];
 
-    for (var prog in programs) {
+    for (var prog in program) {
       var currFirstTrack = prog.tracks[0];
       var currLastTrack = currFirstTrack;
 
@@ -152,6 +214,7 @@ class TimetableView extends StatelessWidget {
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -264,15 +327,19 @@ class ProgramElement extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           margin: EdgeInsets.all(2),
-          padding: EdgeInsets.all(8),
+          padding: EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: timeEnd - timeStart > 3 ? 8 : 4,
+          ),
           color: Colors.red.shade300,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "${timeToString(timeStart)} - ${timeToString(timeEnd)}",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              if (timeEnd - timeStart > 2)
+                Text(
+                  "${timeToString(timeStart)} - ${timeToString(timeEnd)}",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               Text(name),
             ],
           ),
