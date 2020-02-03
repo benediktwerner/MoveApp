@@ -85,12 +85,10 @@ class DrawerListTile extends StatelessWidget {
 void navigateTo(String route, context) {
   var navigator = Navigator.of(context);
   navigator.pop();
-  if (ModalRoute.of(context).isFirst) {
-    navigator.pushNamed(route);
-  } else if (route == Routes.start) {
+  if (route == Routes.start) {
     navigator.popUntil((r) => r.isFirst);
   } else {
-    navigator.pushReplacementNamed(route);
+    navigator.pushNamed(route);
   }
 }
 
