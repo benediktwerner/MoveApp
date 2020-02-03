@@ -85,7 +85,13 @@ class DrawerListTile extends StatelessWidget {
 void navigateTo(String route, context) {
   var navigator = Navigator.of(context);
   navigator.pop();
-  navigator.pushReplacementNamed(route);
+  if (ModalRoute.of(context).isFirst) {
+    navigator.pushNamed(route);
+  } else if (route == Routes.start) {
+    navigator.popUntil((r) => r.isFirst);
+  } else {
+    navigator.pushReplacementNamed(route);
+  }
 }
 
 class AppSearchDelegate extends SearchDelegate {

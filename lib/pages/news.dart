@@ -7,6 +7,9 @@ import '../routes.dart';
 class NewsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final News arg = ModalRoute.of(context).settings.arguments;
+    if (arg != null) arg.showInDialog(context);
+
     return Page(
       title: "News",
       route: Routes.news,
@@ -22,7 +25,8 @@ class NewsPage extends StatelessWidget {
 
           return ListView.builder(
             itemCount: documents.length,
-            itemBuilder: (context, index) => _buildNewsTile(documents[index]),
+            itemBuilder: (context, index) =>
+                NewsListTile(News.fromDoc(documents[index])),
           );
         },
       ),
@@ -48,36 +52,20 @@ String formatTime(Timestamp timestamp) {
   return "vor $daysDiff Tagen" + timeString;
 }
 
-Widget _buildNewsTile(DocumentSnapshot document) {
-  return NewsListTile(
-    title: document["title"],
-    time: formatTime(document["time"]),
-    content: document["content"],
-  );
-}
-
 class NewsListTile extends StatelessWidget {
-  final String title;
-  final String time;
-  final String content;
+  final News news;
 
-  NewsListTile({
-    @required this.title,
-    @required this.time,
-    @required this.content,
-  });
+  NewsListTile(this.news);
 
   @override
   Widget build(BuildContext context) {
     return Hero(
-      tag: title,
+      tag: news.title,
       transitionOnUserGestures: true,
       flightShuttleBuilder: (context, anim, dir, fromContext, toContext) =>
-          NewsCard(title, time, content, anim),
+          NewsCard(news, anim),
       child: NewsCard(
-        title,
-        time,
-        content,
+        news,
         AlwaysStoppedAnimation(0),
       ),
     );
@@ -87,14 +75,10 @@ class NewsListTile extends StatelessWidget {
 class NewsCard extends AnimatedWidget {
   static final _opacityTween = Tween<double>(begin: 0, end: 1);
 
-  final String title;
-  final String time;
-  final String content;
+  final News news;
 
   NewsCard(
-    this.title,
-    this.time,
-    this.content, [
+    this.news, [
     Animation<double> animation,
   ]) : super(listenable: animation);
 
@@ -106,8 +90,8 @@ class NewsCard extends AnimatedWidget {
         child: Column(
           children: [
             ListTile(
-              title: Text(title),
-              subtitle: Text(time),
+              title: Text(news.title),
+              subtitle: Text(news.time),
               onTap: createOnTapHandler(context),
             ),
             _content(animation),
@@ -126,7 +110,7 @@ class NewsCard extends AnimatedWidget {
       alignment: Alignment.topLeft,
       child: Opacity(
         opacity: _opacityTween.evaluate(animation),
-        child: Text(content),
+        child: Text(news.content),
       ),
     );
   }
@@ -140,19 +124,15 @@ class NewsCard extends AnimatedWidget {
                   title: Text("News"),
                 ),
                 body: Hero(
-                  tag: title,
+                  tag: news.title,
                   transitionOnUserGestures: true,
                   flightShuttleBuilder:
                       (context, anim, dir, fromContext, toContext) => NewsCard(
-                    title,
-                    time,
-                    content,
+                    news,
                     anim,
                   ),
                   child: NewsCard(
-                    title,
-                    time,
-                    content,
+                    news,
                     AlwaysStoppedAnimation(1),
                   ),
                 ),
@@ -164,5 +144,49 @@ class NewsCard extends AnimatedWidget {
     } else {
       return null;
     }
+  }
+}
+
+class News {
+  final String title;
+  final String time;
+  final String content;
+
+  News.fromNotification(Map<String, dynamic> message)
+      : title = message["data"]["title"],
+        time = message["data"]["time"],
+        content = message["data"]["content"];
+
+  News.fromDoc(DocumentSnapshot doc)
+      : title = doc["title"],
+        time = formatTime(doc["time"]),
+        content = doc["content"];
+
+  void showInDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.title),
+            Divider(),
+            Text(content),
+          ],
+        ),
+        actions: [
+          FlatButton(
+            child: Text("Ok"),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  String toString() {
+    return "($title, $content, $time)";
   }
 }

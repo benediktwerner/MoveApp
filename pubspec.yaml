@@ -10,7 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cloud_firestore:
+  cloud_firestore: ^0.13.0
+  firebase_messaging: ^6.0.9
 
 dev_dependencies:
   flutter_test:

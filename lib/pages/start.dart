@@ -1,9 +1,55 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
 import '../page.dart';
 import '../routes.dart';
+import 'news.dart';
 
-class StartPage extends StatelessWidget {
+class StartPage extends StatefulWidget {
+  @override
+  _StartPageState createState() => _StartPageState();
+}
+
+class _StartPageState extends State<StartPage> {
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  DateTime _lastMessage;
+
+  bool _pauseSinceLastMessage() {
+    final prev = _lastMessage;
+    _lastMessage = DateTime.now();
+    if (prev != null && prev.difference(_lastMessage).inSeconds < 2)
+      return false;
+    return true;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        if (!_pauseSinceLastMessage()) return;
+        News.fromNotification(message).showInDialog(context);
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        final news = News.fromNotification(message);
+        Navigator.of(context).pushNamed(Routes.news, arguments: news);
+      },
+      onResume: (Map<String, dynamic> message) async {
+        final news = News.fromNotification(message);
+        Navigator.of(context).pushNamed(Routes.news, arguments: news);
+      },
+    );
+    _firebaseMessaging.requestNotificationPermissions(
+      const IosNotificationSettings(
+        sound: true,
+        badge: true,
+        alert: true,
+        provisional: true,
+      ),
+    );
+    _firebaseMessaging.subscribeToTopic("news");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Page(
@@ -16,8 +62,9 @@ class StartPage extends StatelessWidget {
             height: 175,
             child: Center(
               child: Image.asset(
-                  "assets/images/logo_move_transparent.png",
-                  width: 250),
+                "assets/images/logo_move_transparent.png",
+                width: 250,
+              ),
             ),
           ),
           Text("Was ist die Move?", style: Theme.of(context).textTheme.title),
