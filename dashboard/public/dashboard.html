@@ -53,34 +53,34 @@
         News
         <button
           type="button"
-          class="btn btn-outline-primary ml-2"
+          class="btn btn-outline-primary ml-2 btn-new"
           data-toggle="modal"
-          data-target="#addModal"
+          data-target="#addEditModal"
         >
           Neu
         </button>
       </h1>
 
-      <div id="card-container"></div>
+      <div id="cardContainer"></div>
     </div>
 
-    <div class="modal fade" id="addModal" tabindex="-1" role="dialog">
+    <div class="modal fade" id="addEditModal" tabindex="-1" role="dialog">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel">News hinzufügen</h5>
+            <h5 class="modal-title"></h5>
             <button type="button" class="close" data-dismiss="modal">
-              <span aria-hidden="true">&times;</span>
+              <span>&times;</span>
             </button>
           </div>
           <div class="modal-body">
             <div class="form-group">
-              <label for="new-title">Titel</label>
-              <input type="text" class="form-control" id="new-title" />
+              <label for="titleInput">Titel</label>
+              <input type="text" class="form-control" id="titleInput" />
             </div>
             <div class="form-group">
-              <label for="new-content">Inhalt</label>
-              <textarea class="form-control" id="new-content"></textarea>
+              <label for="contentInput">Inhalt</label>
+              <textarea class="form-control" id="contentInput"></textarea>
             </div>
           </div>
           <div class="modal-footer">
@@ -89,22 +89,22 @@
               type="button"
               class="btn btn-primary"
               data-dismiss="modal"
-              id="add-modal-confirm"
-            >
-              Hinzufügen
-            </button>
+              id="btnConfirmModal"
+            ></button>
           </div>
         </div>
       </div>
     </div>
 
-    <template id="card-template">
+    <template id="cardTemplate">
       <div class="card mb-3">
         <div class="card-body">
           <h5 class="card-title"></h5>
           <h6 class="card-subtitle mb-2 text-muted"></h6>
           <p class="card-text"></p>
-          <a href="#" class="card-link" onclick="onEdit(event)">Bearbeiten</a>
+          <a href="#" class="card-link" data-toggle="modal" data-target="#addEditModal">
+            Bearbeiten
+          </a>
           <a href="#" class="card-link" onclick="onDelete(event)">Löschen</a>
         </div>
       </div>
@@ -128,14 +128,7 @@
 
     <script>
       const db = firebase.firestore();
-
-      var $ = e => document.querySelector(e);
-      Element.prototype.$ = function(cls) {
-        return this.getElementsByClassName(cls)[0];
-      };
-      Element.prototype.$$ = function(cls) {
-        return this.getElementsByClassName(cls);
-      };
+      var news = {};
 
       function formatTime(timestamp) {
         const time = timestamp.toDate();
@@ -162,11 +155,8 @@
         return 'vor ' + daysDiff + ' Tagen' + timeString;
       }
 
-      function onEdit(event) {
-        console.log(event.target.dataset.id);
-      }
-
       function onDelete(event) {
+        event.preventDefault();
         if (confirm('Bist du sicher?')) {
           db.collection('news')
             .doc(event.target.dataset.id)
@@ -176,11 +166,13 @@
       }
 
       db.collection('news').onSnapshot(function(snapshot) {
-        const container = $('#card-container');
-        const template = $('#card-template');
+        const container = $('#cardContainer')[0];
+        const template = $('#cardTemplate')[0];
+        news = {};
         const docs = snapshot.docs.map(d => {
           var obj = d.data();
           obj.id = d.id;
+          news[obj.id] = obj;
           return obj;
         });
         docs.sort((a, b) => b.time.seconds - a.time.seconds);
@@ -192,31 +184,59 @@
           container.appendChild(template.content.cloneNode(true));
         }
 
-        for (const i in docs) {
-          const doc = docs[i];
-          const ele = container.children[i];
-          ele.$('card-title').innerText = doc.title;
-          ele.$('card-subtitle').innerText = formatTime(doc.time);
-          ele.$('card-text').innerText = doc.content;
-          for (const btn of ele.$$('card-link')) {
-            btn.dataset.id = doc.id;
-          }
-        }
+        $('#cardContainer')
+          .children()
+          .each((i, ele) => {
+            ele = $(ele);
+            const doc = docs[i];
+            ele.find('.card-title').text(doc.title);
+            ele.find('.card-subtitle').text(formatTime(doc.time));
+            ele.find('.card-text').text(doc.content);
+            ele.find('.card-link').each((_, btn) => (btn.dataset.id = doc.id));
+          });
       });
 
-      document.addEventListener('DOMContentLoaded', event => {
-        $('#add-modal-confirm').addEventListener('click', () => {
-          db.collection('news')
-            .add({
-              title: $('#new-title').value,
-              content: $('#new-content').value,
-              time: new Date(),
-            })
-            .catch(error => alert('Fehler: ' + error));
-          $('#new-title').value = '';
-          $('#new-content').value = '';
+      $(() => {
+        $('#addEditModal').on('show.bs.modal', event => {
+          if (event.relatedTarget.dataset.id) {
+            const doc = news[event.relatedTarget.dataset.id];
+            $('#addEditModal .modal-title').text('News bearbeiten');
+            $('#addEditModal #titleInput').val(doc.title);
+            $('#addEditModal #contentInput').val(doc.content);
+            $('#addEditModal #btnConfirmModal')
+              .text('Speichern')
+              .data('id', doc.id);
+          } else {
+            $('#addEditModal .modal-title').text('News hinzufügen');
+            $('#addEditModal #titleInput').val('');
+            $('#addEditModal #contentInput').val('');
+            $('#addEditModal #btnConfirmModal').text('Hinzufügen');
+            $('#addEditModal #btnConfirmModal')
+              .text('Speichern')
+              .data('id', null);
+          }
         });
-        $('#logout').addEventListener('click', () =>
+        $('#btnConfirmModal').click(event => {
+          const id = $(event.target).data("id");
+          if (id) {
+            db.collection('news')
+              .doc(id)
+              .update({
+                title: $('#titleInput').val(),
+                content: $('#contentInput').val(),
+              })
+              .catch(error => alert('Fehler: ' + error));
+          } else {
+            db.collection('news')
+              .add({
+                title: $('#titleInput').val(),
+                content: $('#contentInput').val(),
+                time: new Date(),
+              })
+              .catch(error => alert('Fehler: ' + error));
+          }
+        });
+        $('#logout').click(() =>
           firebase
             .auth()
             .signOut()
