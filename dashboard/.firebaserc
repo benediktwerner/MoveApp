@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "move-app-2020"
+  },
+  "targets": {
+    "move-app-2020": {
+      "hosting": {
+        "admin-panel": [
+          "move-2020"
+        ]
+      }
+    }
   }
 }
