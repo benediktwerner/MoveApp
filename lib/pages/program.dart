@@ -120,9 +120,21 @@ class _ProgramPageState extends State<ProgramPage>
         if (!ps.containsKey(day)) ps[day] = [];
         ps[day].add(Program(p["timeStart"], p["timeEnd"], ts, p["name"]));
       }
+      final now = DateTime.now();
+      final today = Timestamp.fromDate(DateTime.utc(
+        now.year,
+        now.month,
+        now.day,
+      ));
       return TabBarView(
         controller: _tabController,
-        children: days.map((d) => TimetableView(tracks, ps[d])).toList(),
+        children: days.map((d) {
+          return TimetableView(
+            tracks,
+            ps[d],
+            showTime: d == today,
+          );
+        }).toList(),
       );
     }
   }
@@ -152,20 +164,40 @@ class Program {
   Program(this.start, this.end, this.tracks, this.name);
 }
 
-class TimetableView extends StatelessWidget {
-  final ScrollController _mainScrollController = new ScrollController();
-  final ScrollController _sideScrollController = new ScrollController();
+class TimetableView extends StatefulWidget {
   final List<String> tracks;
   final List<Program> program;
+  final bool showTime;
 
-  TimetableView(this.tracks, this.program);
+  TimetableView(this.tracks, this.program, {this.showTime = false});
+
+  @override
+  _TimetableViewState createState() => _TimetableViewState();
+}
+
+class _TimetableViewState extends State<TimetableView> {
+  final ScrollController _mainScrollController = new ScrollController();
+  final ScrollController _sideScrollController = new ScrollController();
+  Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(Duration(minutes: 5), (_) => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _timer.cancel();
+  }
 
   @override
   Widget build(BuildContext context) {
     var start = 9 * 4;
     var end = 18 * 4;
 
-    for (var prog in program) {
+    for (var prog in widget.program) {
       start = min(start, prog.start);
       end = max(end, prog.end);
     }
@@ -177,14 +209,14 @@ class TimetableView extends StatelessWidget {
     List<Widget> programElements = [
       CustomPaint(
         size: Size(
-          leftWidth + cellWidth * tracks.length,
+          leftWidth + cellWidth * widget.tracks.length,
           cellHeight * (end - start),
         ),
-        painter: GridPainter(start, end, tracks.length),
+        painter: GridPainter(start, end, widget.tracks.length),
       ),
     ];
 
-    for (var prog in program) {
+    for (var prog in widget.program) {
       var currFirstTrack = prog.tracks[0];
       var currLastTrack = currFirstTrack;
 
@@ -213,6 +245,9 @@ class TimetableView extends StatelessWidget {
       ));
     }
 
+    final now = DateTime.now();
+    final quarters = now.hour * 4 + now.minute / 15;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -222,11 +257,11 @@ class TimetableView extends StatelessWidget {
           physics: NeverScrollableScrollPhysics(),
           child: SizedBox(
             height: topHeight,
-            width: leftWidth + cellWidth * tracks.length,
+            width: leftWidth + cellWidth * widget.tracks.length,
             child: Row(
               children: [
                 SizedBox(width: leftWidth),
-                ...tracks.map((t) => TrackHeading(t)),
+                ...widget.tracks.map((t) => TrackHeading(t)),
               ],
             ),
           ),
@@ -238,38 +273,54 @@ class TimetableView extends StatelessWidget {
           child: SingleChildScrollView(
             child: SizedBox(
               height: cellHeight * (end - start),
-              child: Row(
+              child: Stack(
                 children: [
-                  SizedBox(
-                    width: leftWidth,
-                    child: Column(
-                      children: List.generate(
-                        (end - start) ~/ 4,
-                        (i) => TimeHeading(start + i * 4),
-                      ),
-                    ),
-                  ),
-                  VerticalDivider(width: 1),
-                  Expanded(
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: (_) {
-                        _sideScrollController
-                            .jumpTo(_mainScrollController.offset);
-                        return false;
-                      },
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        controller: _mainScrollController,
-                        child: SizedBox(
-                          width: cellWidth * tracks.length,
-                          height: cellHeight * (end - start),
-                          child: Stack(
-                            children: programElements,
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: leftWidth,
+                        child: Column(
+                          children: List.generate(
+                            (end - start) ~/ 4,
+                            (i) => TimeHeading(start + i * 4),
                           ),
                         ),
                       ),
-                    ),
+                      VerticalDivider(width: 1),
+                      Expanded(
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: (_) {
+                            _sideScrollController
+                                .jumpTo(_mainScrollController.offset);
+                            return false;
+                          },
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            controller: _mainScrollController,
+                            child: SizedBox(
+                              width: cellWidth * widget.tracks.length,
+                              height: cellHeight * (end - start),
+                              child: Stack(
+                                children: programElements,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  widget.showTime
+                      ? Positioned(
+                          left: 0,
+                          right: 0,
+                          top: cellHeight * (quarters - start),
+                          child: Divider(
+                            color: Colors.redAccent.shade700,
+                            thickness: 2,
+                            height: 1,
+                          ),
+                        )
+                      : Container(),
                 ],
               ),
             ),
