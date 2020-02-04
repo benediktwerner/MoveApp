@@ -4,12 +4,23 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../page.dart';
 import '../routes.dart';
 
-class NewsPage extends StatelessWidget {
+class NewsPage extends StatefulWidget {
+  @override
+  _NewsPageState createState() => _NewsPageState();
+}
+
+class _NewsPageState extends State<NewsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final News arg = ModalRoute.of(context).settings.arguments;
+      if (arg != null) arg.showInDialog(context);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final News arg = ModalRoute.of(context).settings.arguments;
-    if (arg != null) arg.showInDialog(context);
-
     return Page(
       title: "News",
       route: Routes.news,

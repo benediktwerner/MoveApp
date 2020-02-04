@@ -18,6 +18,7 @@ void main() {
       theme: ThemeData(primarySwatch: Colors.red),
       initialRoute: Routes.start,
       onGenerateRoute: (settings) => PageRouteBuilder(
+        settings: settings,
         pageBuilder: (_, __, ___) {
           switch (settings.name) {
             case Routes.start:
