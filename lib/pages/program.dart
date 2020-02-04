@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../page.dart';
 import '../routes.dart';
@@ -37,6 +38,7 @@ class ProgramPage extends StatefulWidget {
 
 class _ProgramPageState extends State<ProgramPage>
     with TickerProviderStateMixin {
+  static const String activeTracksPrefKey = "trackFilter";
   TabController _tabController;
   List<Timestamp> days;
   Map<String, int> tracksToPos;
@@ -50,6 +52,8 @@ class _ProgramPageState extends State<ProgramPage>
   @override
   void initState() {
     super.initState();
+
+    _loadPrefs();
 
     _programListener =
         Firestore.instance.collection("program").snapshots().listen((snapshot) {
@@ -85,6 +89,14 @@ class _ProgramPageState extends State<ProgramPage>
         _rebuildPrograms();
       });
     });
+  }
+
+  void _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    trackActive = prefs
+        .getStringList(activeTracksPrefKey)
+        ?.map((s) => s == "t")
+        ?.toList();
   }
 
   void _rebuildPrograms() {
@@ -153,6 +165,10 @@ class _ProgramPageState extends State<ProgramPage>
                 if (active != null) {
                   setState(() {
                     trackActive = active;
+                    SharedPreferences.getInstance().then((prefs) {
+                      prefs.setStringList(activeTracksPrefKey,
+                          trackActive.map((t) => t ? "t" : "f").toList());
+                    });
                     _rebuildPrograms();
                   });
                 }
