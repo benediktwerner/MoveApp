@@ -8,8 +8,15 @@ class Page extends StatelessWidget {
   final String route;
   final Widget body;
   final Widget bottomNavigationBar;
+  final List<Widget> actions;
 
-  Page({this.title, this.route, this.body, this.bottomNavigationBar});
+  Page({
+    this.title,
+    this.route,
+    this.body,
+    this.bottomNavigationBar,
+    this.actions = const [],
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +29,15 @@ class Page extends StatelessWidget {
             tooltip: "Suchen",
             onPressed: () async {
               final route = await showSearch(
-                  context: context, delegate: AppSearchDelegate());
+                context: context,
+                delegate: AppSearchDelegate(),
+              );
               if (route != null) {
                 Navigator.of(context).pushNamed(route);
               }
             },
-          )
+          ),
+          ...actions,
         ],
         elevation: defaultTargetPlatform == TargetPlatform.android ? 5 : 0,
       ),

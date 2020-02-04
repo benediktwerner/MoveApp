@@ -41,7 +41,9 @@ class _ProgramPageState extends State<ProgramPage>
   List<Timestamp> days;
   Map<String, int> tracksToPos;
   List<String> tracks;
-  List<DocumentSnapshot> programs;
+  List<bool> trackActive;
+  Map<Timestamp, List<Program>> programs;
+  List<DocumentSnapshot> programDocs;
   StreamSubscription<QuerySnapshot> _programListener;
   StreamSubscription<QuerySnapshot> _tracksListener;
 
@@ -52,9 +54,9 @@ class _ProgramPageState extends State<ProgramPage>
     _programListener =
         Firestore.instance.collection("program").snapshots().listen((snapshot) {
       setState(() {
-        programs = snapshot.documents;
+        programDocs = snapshot.documents;
         final daysSet = Set<Timestamp>();
-        for (var prog in programs) {
+        for (var prog in programDocs) {
           daysSet.add(prog.data["day"]);
         }
         days = daysSet.toList();
@@ -64,6 +66,7 @@ class _ProgramPageState extends State<ProgramPage>
           _tabController = TabController(vsync: this, length: days.length);
           _tabController.addListener(() => setState(() {}));
         }
+        _rebuildPrograms();
       });
     });
 
@@ -76,8 +79,41 @@ class _ProgramPageState extends State<ProgramPage>
           tracksToPos[track.documentID] = track.data["position"];
           tracks.add(track.documentID);
         }
+        if (trackActive == null || trackActive.length != tracks.length) {
+          trackActive = List.filled(tracks.length, true);
+        }
+        _rebuildPrograms();
       });
     });
+  }
+
+  void _rebuildPrograms() {
+    if (programDocs == null || tracks == null) return;
+
+    var sub = 0;
+    final filterSub = [];
+    for (final isActive in trackActive) {
+      if (!isActive) sub++;
+      filterSub.add(sub);
+    }
+
+    programs = {};
+    for (final day in days) programs[day] = [];
+
+    for (final p in programDocs) {
+      final ts = <int>[];
+      for (final t in p["tracks"]) {
+        final tPos = tracksToPos[t];
+        if (trackActive[tPos]) {
+          ts.add(tPos - filterSub[tPos]);
+        }
+      }
+      if (ts.isNotEmpty) {
+        ts.sort();
+        programs[p["day"]]
+            .add(Program(p["timeStart"], p["timeEnd"], ts, p["name"]));
+      }
+    }
   }
 
   @override
@@ -104,39 +140,57 @@ class _ProgramPageState extends State<ProgramPage>
                 setState(() => _tabController.animateTo(index));
               },
             ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.settings),
+          tooltip: "Filter einstellen",
+          onPressed: () {
+            if (tracks != null) {
+              showDialog(
+                context: context,
+                builder: (context) => FilterDialog(tracks, trackActive),
+              ).then((active) {
+                if (active != null) {
+                  setState(() {
+                    trackActive = active;
+                    _rebuildPrograms();
+                  });
+                }
+              });
+            }
+          },
+        )
+      ],
     );
   }
 
   Widget _makeBody() {
     if (tracks == null || programs == null) {
       return Center(child: CircularProgressIndicator());
-    } else {
-      final ps = <Timestamp, List<Program>>{};
-      for (final p in programs) {
-        final ts = <int>[];
-        for (final t in p["tracks"]) ts.add(tracksToPos[t]);
-        ts.sort();
-        final day = p["day"];
-        if (!ps.containsKey(day)) ps[day] = [];
-        ps[day].add(Program(p["timeStart"], p["timeEnd"], ts, p["name"]));
-      }
-      final now = DateTime.now();
-      final today = Timestamp.fromDate(DateTime.utc(
-        now.year,
-        now.month,
-        now.day,
-      ));
-      return TabBarView(
-        controller: _tabController,
-        children: days.map((d) {
-          return TimetableView(
-            tracks,
-            ps[d],
-            showTime: d == today,
-          );
-        }).toList(),
-      );
     }
+
+    final now = DateTime.now();
+    final today = Timestamp.fromDate(DateTime.utc(
+      now.year,
+      now.month,
+      now.day,
+    ));
+
+    final tracksFiltered = <String>[];
+    for (var i = 0; i < tracks.length; i++) {
+      if (trackActive[i]) tracksFiltered.add(tracks[i]);
+    }
+
+    return TabBarView(
+      controller: _tabController,
+      children: days.map((d) {
+        return TimetableView(
+          tracksFiltered,
+          programs[d],
+          showTime: d == today,
+        );
+      }).toList(),
+    );
   }
 
   List<BottomNavigationBarItem> _makeBottomNavBarItems() {
@@ -152,6 +206,58 @@ class _ProgramPageState extends State<ProgramPage>
       ));
     }
     return result;
+  }
+}
+
+class FilterDialog extends StatefulWidget {
+  final List<String> tracks;
+  final List<bool> initialActive;
+
+  FilterDialog(this.tracks, this.initialActive);
+
+  @override
+  _FilterDialogState createState() => _FilterDialogState();
+}
+
+class _FilterDialogState extends State<FilterDialog> {
+  List<bool> active;
+
+  @override
+  void initState() {
+    super.initState();
+    active = widget.initialActive;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final singleActive =
+        active.map((b) => b ? 1 : 0).reduce((a, b) => a + b) == 1;
+
+    return AlertDialog(
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Filter", style: Theme.of(context).textTheme.title),
+          Divider(),
+          ...Iterable<int>.generate(active.length).map(
+            (i) => CheckboxListTile(
+              title: Text(widget.tracks[i]),
+              value: active[i],
+              onChanged: singleActive && active[i]
+                  ? null
+                  : (val) => setState(() => active[i] = val),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        FlatButton(
+          child: Text("Ok"),
+          onPressed: () => Navigator.of(context).pop(active),
+        ),
+      ],
+    );
   }
 }
 
@@ -183,13 +289,15 @@ class _TimetableViewState extends State<TimetableView> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(Duration(minutes: 5), (_) => setState(() {}));
+    if (widget.showTime) {
+      _timer = Timer.periodic(Duration(minutes: 5), (_) => setState(() {}));
+    }
   }
 
   @override
   void dispose() {
+    _timer?.cancel();
     super.dispose();
-    _timer.cancel();
   }
 
   @override
