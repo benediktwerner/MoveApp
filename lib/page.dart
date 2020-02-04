@@ -65,6 +65,16 @@ class Page extends StatelessWidget {
             DrawerListTile("Spenden", Icons.favorite, Routes.donate, route),
             DrawerListTile(
                 "Social Media", Icons.share, Routes.socialMedia, route),
+            ListTile(
+              leading: Icon(Icons.info_outline),
+              title: Text("Über die App"),
+              onTap: () => showAboutDialog(
+                context: context,
+                applicationName: "Move 2020 App",
+                applicationVersion: "1.0.0",
+                applicationLegalese: "© 2020 Benedikt Werner",
+              ),
+            ),
           ],
         ),
       ),
