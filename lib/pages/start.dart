@@ -95,7 +95,7 @@ class _StartPageState extends State<StartPage> {
               TableRow(children: [
                 _MainButton(
                     Icons.people, "Sprecher & Musiker", Routes.speakers),
-                _MainButton(Icons.book, "Gebetsbuch", Routes.prayers),
+                _MainButton(Icons.book, "Gebetbuch", Routes.prayers),
               ]),
               TableRow(children: [
                 _MainButton(Icons.announcement, "News", Routes.news),

@@ -58,7 +58,7 @@ class Page extends StatelessWidget {
             DrawerListTile(
                 "Programm", Icons.calendar_today, Routes.program, route),
             DrawerListTile("Lageplan", Icons.map, Routes.map, route),
-            DrawerListTile("Gebetsbuch", Icons.book, Routes.prayers, route),
+            DrawerListTile("Gebetbuch", Icons.book, Routes.prayers, route),
             DrawerListTile(
                 "Sprecher & Musiker", Icons.people, Routes.speakers, route),
             DrawerListTile("News", Icons.announcement, Routes.news, route),
