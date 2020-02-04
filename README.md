@@ -33,6 +33,9 @@ App für die [Move 2020](https://www.move2020.org/).
         - Spenden
         - Social Media
 
+## Optional stuff
+- Scheduled notifiactions
+
 ## TODO for iOS
 - Drag `GoogleService-info.plist` into Runner directory in Xcode (check `Create groups`)
 - Register push notifications on APNs: https://firebase.google.com/docs/cloud-messaging/ios/certs
